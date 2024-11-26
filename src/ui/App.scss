@@ -7,7 +7,7 @@
   position: relative;
   width: 100vw;
   height: 100vh;
-  padding-top: 30px;
+  padding: 25px;
   .go-back-btn {
     position: absolute;
     top: 20px;
@@ -48,6 +48,7 @@
     }
   }
 }
+
 .signup-page {
   display: flex;
   flex-direction: column;
@@ -64,5 +65,16 @@
       height: 20px;
       padding: 7px;
     }
+  }
+}
+
+.home-page {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 20px;
+  &__header {
+    display: flex;
+    justify-content: space-between;
   }
 }
