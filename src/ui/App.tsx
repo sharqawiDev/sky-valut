@@ -1,5 +1,6 @@
 import {
   createUserWithEmailAndPassword,
+  getAuth,
   GoogleAuthProvider,
   signInWithPopup,
 } from "firebase/auth";
@@ -7,16 +8,19 @@ import { getRecaptchaVerifier, signInWithEmailLink } from "firebase/auth";
 import "./App.scss";
 import logo from "../assets/logo.png";
 import { useNavigate } from "react-router";
-import { auth } from "../constants";
-import { useEffect } from "react";
+import firebaseApp from "../constants";
+import { useEffect, useState } from "react";
 function App() {
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const auth = getAuth(firebaseApp);
   useEffect(() => {
     auth.onAuthStateChanged((user) => {
-      console.log(user);
       if (user) navigate("home");
+      else setLoading(false);
     });
   }, [auth, navigate]);
+  if (loading) return <>Loading...</>;
   return (
     <div className="start-page">
       <img src={logo} />

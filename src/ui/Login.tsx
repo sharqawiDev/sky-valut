@@ -1,12 +1,13 @@
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { auth } from "../constants";
+import firebaseApp from "../constants";
 
 export const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
+  const auth = getAuth(firebaseApp);
   const handleLogin = () => {
     signInWithEmailAndPassword(auth, email, password)
       .then(() => navigate("/home"))
