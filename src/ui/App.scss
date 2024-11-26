@@ -48,6 +48,15 @@
       padding: 7px;
     }
   }
+  .forgot-password-popup {
+    .popup-content{
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+    }
+  }
+
 }
 
 .signup-page {
