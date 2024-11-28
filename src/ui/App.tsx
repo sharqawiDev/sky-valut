@@ -1,10 +1,7 @@
+ 
 import {
-  createUserWithEmailAndPassword,
   getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
 } from "firebase/auth";
-import { getRecaptchaVerifier, signInWithEmailLink } from "firebase/auth";
 import "./App.scss";
 import logo from "../assets/logo.png";
 import { useNavigate } from "react-router";
