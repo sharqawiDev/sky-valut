@@ -1,4 +1,4 @@
-import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail} from "firebase/auth";
+import { getAuth, signInWithEmailAndPassword, sendPasswordResetEmail } from "firebase/auth";
 import { useState } from "react";
 import { useNavigate } from "react-router";
 import firebaseApp from "../constants";
@@ -10,29 +10,39 @@ export const Login = () => {
   const [resetEmail, setResetEmail] = useState("");
   const navigate = useNavigate();
   const auth = getAuth(firebaseApp);
-  const handleLogin = () => {
-    signInWithEmailAndPassword(auth, email, password)
-      .then(() => navigate("/home"))
-      .catch((e) => alert(e.message));
+
+  const handleLogin = async () => {
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      await user.reload();
+      if (user.emailVerified) {
+        navigate("/home");
+      } else {
+        await auth.signOut();
+        alert("Please verify your email before logging in.");
+      }
+    } catch (e) {
+      alert(e.message);
+    }
   };
 
-  const handleForgotPassword = () => {
+  const handleForgotPassword = async () => {
     if (resetEmail) {
-      sendPasswordResetEmail(auth, resetEmail)
-        .then(() => {
-          alert("Password reset email sent! Please check your inbox.");
-          setShowForgotPassword(false);
-        })
-        .catch((e) => {
-          alert(e.message);
-        });
+      try {
+        await sendPasswordResetEmail(auth, resetEmail);
+        alert("Password reset email sent! Please check your inbox.");
+        setShowForgotPassword(false);
+      } catch (e) {
+        alert(e.message);
+      }
     } else {
       alert("Please enter your email address to receive the password reset link.");
     }
   };
 
-  const isValid =
-    /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/g.test(email) && password.length > 3;
+  const isValid = /^[\w-.]+@([\w-]+\.)+[\w-]{2,4}$/g.test(email) && password.length > 3;
 
   return (
     <div className="login-page">
@@ -54,7 +64,11 @@ export const Login = () => {
           required
           onChange={(v) => setPassword(v.target.value)}
         />
-        <button type="submit" onClick={() => handleLogin()} disabled={!isValid}>
+        <button
+          type="submit"
+          onClick={isValid ? handleLogin : undefined}
+          disabled={!isValid}
+        >
           Login
         </button>
       </form>
@@ -80,7 +94,7 @@ export const Login = () => {
               required
               onChange={(v) => setResetEmail(v.target.value)}
             />
-            <button onClick={() => handleForgotPassword()}>Submit</button>
+            <button onClick={handleForgotPassword}>Submit</button>
             <button onClick={() => setShowForgotPassword(false)}>Cancel</button>
           </div>
         </div>

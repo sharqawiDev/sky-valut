@@ -87,7 +87,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #2b2b2b;
+    background-color: #1b2333;
     gap: 10px; 
 
     .home-page__logo {
@@ -104,28 +104,47 @@
     gap: 15px;
     align-items: flex-start;
     margin-left: 10%;
-
   }
   
   .file-upload-input-wrapper {
-    background-color: #2b2b2b;
+    background-color: #1b2333;
     padding: 5px;
     border-radius: 5px;
   }
   
 
   .file-display-section {
-    margin-top: 30px;
+    margin-top: 20px;
     display: flex;
     flex-direction: row;
     justify-content: space-between;
 
     .file-list {
       width: 60%;
-      background-color: #2d2d2d;
+      background-color: #1b2333;
       padding: 20px;
       color: white;
       border-radius: 10px;
+      .file-search-input {
+        background-color: #535353;
+        margin-bottom: 10px;
+      }
+    }
+
+    .rename-input-section {
+      margin-top: 20px;
+      gap: 10px;
+      .rename-input {
+        width: 250px;
+        padding: 7px;
+        margin-right: 10px;
+      }
+      .button-rename-submit,
+      .button-rename-cancel {
+        padding: 10px;
+        border-radius: 5px;
+        margin-top: 10px;
+      }
     }
 
     .file-options,
@@ -137,6 +156,9 @@
       button {
         padding: 10px;
         border-radius: 5px;
+      }
+      .button-trash {
+        background-color: rgb(100, 4, 4);
       }
     }
 

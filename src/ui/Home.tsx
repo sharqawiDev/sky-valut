@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { signOut } from "firebase/auth";
@@ -12,21 +13,23 @@ export const Home = () => {
   const { currentUser } = auth;
   const navigate = useNavigate();
   const [files, setFiles] = useState([]);
+  const [filteredFiles, setFilteredFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [selectedAllFile, setSelectedAllFile] = useState(null);
   const [newFileName, setNewFileName] = useState("");
-  const [allFilesWindow, setAllFilesWindow] = useState(null);
+  const [showRenameInput, setShowRenameInput] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const dropbox = new Dropbox({
     accessToken:
-      "sl.CBgsNGR5YDBBrq2WUdZUwnInqZ-E8LsuYs5ndXkG_hqdLZOWK36P2GHOQ6JATameLQ-Fr4_mcIV-JYtIXAYnOIF6TsOP15NJwK7HZO_OonGiUem-aXTOglXR5Q5ntYfiwrBXD_zYN3GcM38ehHMUhjc",
+      "sl.CBhtFjx6H4ekD_Le1Bo6mqT6mvnvskrOCoc-wL2oGu_UAxe9WiloRuJfzeE8OUHgEKvIMQP5ALsi-7XQJZV_MWPt8SMuEVoml_5hPOW3JhFmbGL0uCfZV8pPsUjV5eeJ-w9jwxuh9qVuptYtNaxzmSc",
   });
 
   const handleSignOut = () => {
     signOut(auth).then(() => navigate("/", { replace: true }));
   };
 
-  const handleFileUpload = (event) => {
+  const handleFileUpload = (event: { target: { files: any[] } }) => {
     const file = event.target.files?.[0];
     if (file !== null && file !== undefined) {
       dropbox
@@ -47,14 +50,15 @@ export const Home = () => {
     dropbox
       .filesListFolder({ path: "" })
       .then((response) => {
-        setFiles(response.result.entries.slice(0, 5));
+        setFiles(response.result.entries.slice(0, 50));
+        setFilteredFiles(response.result.entries.slice(0, 50));
       })
       .catch((error) => {
         console.error("Error fetching files", error);
       });
   };
 
-  const handleFileClick = (file) => {
+  const handleFileClick = (file: React.SetStateAction<null>) => {
     setSelectedFile(file);
   };
 
@@ -68,9 +72,6 @@ export const Home = () => {
           setSelectedFile(null);
           setSelectedAllFile(null);
           fetchFiles();
-          if (allFilesWindow) {
-            showAllFilesInWindow();
-          }
         })
         .catch((error) => {
           console.error("Error deleting file", error);
@@ -82,14 +83,15 @@ export const Home = () => {
   };
 
   const handleRenameFile = () => {
+    setShowRenameInput(true);
+  };
+
+  const handleRenameSubmit = () => {
     const fileToRename = selectedFile || selectedAllFile;
     if (fileToRename && newFileName) {
-      // Extract the file extension from the current file
-      const fileExtension = fileToRename.name.split('.').pop();
-      
-      // Construct the new file name, maintaining the original extension
+      const fileExtension = fileToRename.name.split(".").pop();
       const newFullFileName = `${newFileName}.${fileExtension}`;
-  
+
       dropbox
         .filesMoveV2({
           from_path: fileToRename.path_lower,
@@ -100,20 +102,22 @@ export const Home = () => {
           setSelectedFile(null);
           setSelectedAllFile(null);
           setNewFileName("");
+          setShowRenameInput(false);
           fetchFiles();
-          if (allFilesWindow) {
-            showAllFilesInWindow();
-          }
         })
         .catch((error) => {
           console.error("Error renaming file", error);
           alert("Error renaming file.");
         });
     } else {
-      alert("Please select a file and enter a new name.");
+      alert("Please enter a new name.");
     }
   };
-  
+
+  const handleRenameCancel = () => {
+    setShowRenameInput(false);
+    setNewFileName("");
+  };
 
   const handleDownloadFile = () => {
     const fileToDownload = selectedFile || selectedAllFile;
@@ -139,52 +143,12 @@ export const Home = () => {
     }
   };
 
-  const handleShowAllFiles = () => {
-    const newWindow = window.open("", "_blank", "width=600,height=400");
-    setAllFilesWindow(newWindow);
-
-    dropbox
-      .filesListFolder({ path: "" })
-      .then((response) => {
-        const files = response.result.entries;
-        setSelectedAllFile(null);
-        if (newWindow) {
-          newWindow.document.write("<h3>All Uploaded Files</h3>");
-          files.forEach((file, index) => {
-            newWindow.document.write(
-              `<div id="file-${index}" style="cursor: pointer; padding: 10px;">${file.name}</div>`
-            );
-            newWindow.document.getElementById(`file-${index}`).onclick = () => {
-              setSelectedAllFile(file);
-            };
-          });
-        }
-      })
-      .catch((error) => {
-        console.error("Error fetching all files", error);
-      });
-  };
-
-  const showAllFilesInWindow = () => {
-    if (allFilesWindow) {
-      allFilesWindow.document.body.innerHTML = "<h3>All Uploaded Files</h3>";
-      dropbox
-        .filesListFolder({ path: "" })
-        .then((response) => {
-          const files = response.result.entries;
-          files.forEach((file, index) => {
-            allFilesWindow.document.write(
-              `<div id="file-${index}" style="cursor: pointer; padding: 10px;">${file.name}</div>`
-            );
-            allFilesWindow.document.getElementById(`file-${index}`).onclick = () => {
-              setSelectedAllFile(file);
-            };
-          });
-        })
-        .catch((error) => {
-          console.error("Error fetching all files", error);
-        });
-    }
+  const handleSearch = (event: { target: { value: string } }) => {
+    const query = event.target.value.toLowerCase();
+    setSearchQuery(query);
+    setFilteredFiles(
+      files.filter((file) => file.name.toLowerCase().includes(query))
+    );
   };
 
   useEffect(() => {
@@ -195,7 +159,7 @@ export const Home = () => {
     <div className="home-page">
       <div className="home-page__header">
         <img src={logo} alt="Logo" className="home-page__logo" />
-        <p>Welcome, {currentUser?.displayName || currentUser?.email}</p>
+        <p>Welcome, {currentUser?.displayName }</p>
         <button onClick={handleSignOut}>Sign Out</button>
       </div>
       <div className="file-upload-section">
@@ -211,8 +175,24 @@ export const Home = () => {
       <div className="file-display-section">
         <div className="file-list">
           <h3>Uploaded Files</h3>
-          <div className="uploaded-files-list">
-            {files.map((file) => (
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={handleSearch}
+            placeholder="Search files"
+            className="file-search-input"
+          />
+          <div
+            className="uploaded-files-grid scrollable"
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(100px, 1fr))",
+              gap: "10px",
+              maxHeight: "300px",
+              overflowY: "auto",
+            }}
+          >
+            {filteredFiles.map((file) => (
               <div
                 key={file.id}
                 className={`file-item ${
@@ -221,8 +201,12 @@ export const Home = () => {
                 onClick={() => handleFileClick(file)}
                 style={{
                   cursor: "pointer",
+                  padding: "10px",
+                  textAlign: "center",
+                  borderRadius: "8px",
                   backgroundColor:
-                    selectedFile?.id === file.id ? "#222222" : "transparent",
+                    selectedFile?.id === file.id ? "#27334b" : "#1c1f25",
+                  color: "#ffffff",
                 }}
               >
                 <span>{file.name}</span>
@@ -237,19 +221,32 @@ export const Home = () => {
           <button className="button-delete" onClick={handleDeleteFile}>
             Delete
           </button>
-          <input
-            type="text"
-            value={newFileName}
-            onChange={(e) => setNewFileName(e.target.value)}
-            placeholder="Enter new file name"
-            className="rename-input"
-          />
           <button className="button-rename" onClick={handleRenameFile}>
             Rename
           </button>
-          <button className="button-show-all-files" onClick={handleShowAllFiles}>
-            Show All Files
-          </button>
+          {showRenameInput && (
+            <div className="rename-input-section">
+              <input
+                type="text"
+                value={newFileName}
+                onChange={(e) => setNewFileName(e.target.value)}
+                placeholder="Enter new file name"
+                className="rename-input"
+              />
+              <button
+                className="button-rename-submit"
+                onClick={handleRenameSubmit}
+              >
+                Submit
+              </button>
+              <button
+                className="button-rename-cancel"
+                onClick={handleRenameCancel}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>
